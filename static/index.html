@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Translation</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #4682b4;
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            resize: none;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #ffb6c1;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #ff69b4;
+        }
+        #outputText {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e6e6fa;
+            border-radius: 5px;
+            min-height: 50px;
+            font-size: 16px;
+        }
+        #loading {
+            font-size: 18px;
+            color: #4682b4;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>マジカル☆ウルトラスーパーミラクル Tlanslator</h1>
+        <textarea id="inputText" placeholder="Enter text..."></textarea>
+
+        <select id="targetLang">
+            {% for display, value in languages.items() %}
+                <option value="{{ value }}">{{ display }}</option>
+            {% endfor %}
+        </select>
+
+        <button onclick="translateText('llama-3-elyza-jp-8b')">Translate</button>
+        <button onclick="translateText('cyberagent-deepseek-r1-distill-qwen-14b-japanese')">Deep Translate（時間かかるよ）</button>
+        <div id="loading" style="display: none;">Loading...</div>
+        <div id="outputText"></div>
+    </div>
+
+    <script>
+        function removeThinkTags(text) {
+            return text.replace(/<think>.*?<\/think>/g, '');
+        }
+        function removeThinkElements() {
+            var outputDiv = document.getElementById('outputText');
+            var htmlContent = outputDiv.innerHTML;
+            var updatedContent = htmlContent.replace(/&lt;think&gt;.*?&lt;\/think&gt;/gs, '');
+            outputDiv.innerHTML = updatedContent;
+        }
+
+        async function translateText(model) {
+            let text = document.getElementById("inputText").value;
+            const targetLang = document.getElementById("targetLang").value;
+            const loading = document.getElementById("loading");
+            const outputText = document.getElementById("outputText");
+
+            loading.style.display = "block";
+            outputText.innerText = "";
+
+            const response = await fetch("/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text, target_lang: targetLang, model: model })
+            });
+
+            const result = await response.json();
+            loading.style.display = "none";
+            outputText.innerText = removeThinkTags(result.translated_text || "Error in translation");
+        }
+
+        setInterval(() => {
+            const inputText = document.getElementById("inputText");
+            inputText.value = removeThinkTags(inputText.value);
+            removeThinkElements();
+        }, 1000);
+    </script>
+</body>
+</html>

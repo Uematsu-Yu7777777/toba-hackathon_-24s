@@ -17,14 +17,28 @@
             {% endfor %}
         </select>
 
-        <button onclick="translateText()">Translate</button>
+        <button onclick="translateText('llama-3-elyza-jp-8b')">Translate</button>
+        <button onclick="translateText('cyberagent-deepseek-r1-distill-qwen-14b-japanese')">Deep Translate（時間かかるよ）</button>
         <div id="loading" style="display: none;">Loading...</div>
         <div id="outputText"></div>
     </div>
 
     <script>
-        async function translateText() {
-            const text = document.getElementById("inputText").value;
+        function removeThinkTags(text) {
+            return text.replace(/<think>.*?<\/think>/g, '');
+        }
+        function removeThinkElements() {
+      var outputDiv = document.getElementById('outputText');
+      var htmlContent = outputDiv.innerHTML;
+      var updatedContent = htmlContent.replace(/&lt;think&gt;.*?&lt;\/think&gt;/gs, '');
+      outputDiv.innerHTML = updatedContent;
+    }
+
+
+
+
+        async function translateText(model) {
+            let text = document.getElementById("inputText").value;
             const targetLang = document.getElementById("targetLang").value;
             const loading = document.getElementById("loading");
             const outputText = document.getElementById("outputText");
@@ -35,14 +49,19 @@
             const response = await fetch("/translate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text, target_lang: targetLang })
+                body: JSON.stringify({ text, target_lang: targetLang, model: model })
             });
 
             const result = await response.json();
             loading.style.display = "none";
-            outputText.innerText = result.translated_text || "Error in translation";
+            outputText.innerText = removeThinkTags(result.translated_text || "Error in translation");
         }
+
+        setInterval(() => {
+            const inputText = document.getElementById("inputText");
+            inputText.value = removeThinkTags(inputText.value);
+            removeThinkElements();
+        }, 1000);
     </script>
 </body>
-
 </html>
