@@ -10,7 +10,7 @@ from flask import Flask, request, jsonify
 from pyngrok import ngrok
 import pyngrok
 
-pyngrok.ngrok.set_auth_token("2t9yet7JxaAbeAIpv8UR91RAjf0_4bcxMfcaoEbUYTyWeXkHv")
+pyngrok.ngrok.set_auth_token("token")
 
 
 class ModelManager:

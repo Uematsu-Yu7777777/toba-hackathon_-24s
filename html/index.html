@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>翻訳クライアント</title>
+    <style>
+        /* ベーススタイル */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        textarea, select, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        /* ローディングアニメーション */
+        #loading {
+            display: none;  /* 常に非表示で初期化 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <!-- ローディング画面 -->
+    <div id="loading">読み込み中...</div>
+    <div class="container">
+        <h1>マジカルウルトラスーパーミラクル<br>とらんすれーたー</h1>
+        <textarea id="text" placeholder="翻訳する文章を入力してください"></textarea>
+        <!-- languagesを単純なリストとしてループ -->
+        <select id="target_lang">
+            {% for lang in languages %}
+                <option value="{{ lang }}">{{ lang }}</option>
+            {% endfor %}
+        </select>
+        <!-- モデル選択をドロップダウンに変更 -->
+        <select id="model">
+            <option value="translate">translate</option>
+            <option value="deep translate">deep translate</option>
+        </select>
+        <input type="number" id="max_tokens" placeholder="生成する最大トークン数" value="100">
+        <button id="translateBtn">翻訳</button>
+        <div class="result" id="result"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loadingDiv = document.getElementById('loading');
+            const translateBtn = document.getElementById('translateBtn');
+            
+            translateBtn.addEventListener('click', async function() {
+                // 翻訳ボタン押下時にローディング表示
+                loadingDiv.style.display = 'flex';
+                
+                const text = document.getElementById('text').value;
+                const target_lang = document.getElementById('target_lang').value;
+                const model = document.getElementById('model').value;
+                const max_tokens = document.getElementById('max_tokens').value;
+                
+                try {
+                    const response = await fetch('/translate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text, target_lang, model, max_tokens })
+                    });
+                    const data = await response.json();
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.style.opacity = 0;
+                    resultDiv.innerText = data.result;
+                    void resultDiv.offsetWidth;
+                    resultDiv.style.animation = 'fadeIn 1s forwards';
+                } catch (error) {
+                    console.error('Error:', error);
+                } finally {
+                    // レスポンス取得後にローディング非表示
+                    loadingDiv.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
